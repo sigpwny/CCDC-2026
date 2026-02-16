@@ -31,7 +31,7 @@ ansible-playbook main.yml
 3. Create dashboards and visualizations to assist you with threat hunting
     - Given a process ID, can you get a full process tree? Can you see other processes created by that one?
 
-See [Windows Event IDs Reference](#Windows%20Event%20IDs%20Reference)
+See [Windows Event IDs Reference](#Windows-Event-IDs-Reference)
 
 ### Planned Improvements
 - Ingest Palo Alto, Cisco FTP, and VyOS logs
@@ -51,7 +51,7 @@ _See [linux-inputs.conf](files/linux-inputs.conf)_
 
 #### Security Enhancements
 - process creation (execve) logging with audit
-- folder auditing with audit - see [Monitored Directories](#Monitored%20Directories)
+- folder auditing with audit - see [Monitored Directories](#Monitored-Directories)
 
 #### Collected Logs
 Core OS logs
@@ -88,7 +88,7 @@ HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\GBG
 HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\Data
 ```
 - DNS logging, both in log file and Microsoft-Windows-DNSServer/Analytical channel
-- folder auditing - see [Monitored Directories](#Monitored%20Directories)
+- folder auditing - see [Monitored Directories](#Monitored-Directories)
 
 #### Collected Logs
 Standard Event Logs
