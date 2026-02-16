@@ -71,7 +71,7 @@ Security and firewall logs
 - /var/log/firewalld
 
 ### Windows
-_See [windows-inputs.conf](files/linux-inputs.conf)_
+_See [windows-inputs.conf](files/windows-inputs.conf)_
 
 #### Security Enhancements
 - process creation logging
