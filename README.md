@@ -28,7 +28,8 @@ ansible-playbook main.yml
 ## Recommended Strategy
 1. Create alerts for stopping scored services
 2. Create alerts for changes to files required by scored services
-3. Create dashboards and visualizations to assist you with threat hunting
+3. (optional) Create alerts for logins or access through various lateral movement methods
+4. Create dashboards and visualizations to assist you with threat hunting
     - Given a process ID, can you get a full process tree? Can you see other processes created by that one?
 
 See [Windows Event IDs Reference](#Windows-Event-IDs-Reference)
