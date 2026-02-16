@@ -85,7 +85,7 @@ _See [windows-inputs.conf](files/windows-inputs.conf)_
 - process creation logging
 - PowerShell logging
 - network logon auditing
-- lateral movement (WinRM and WMI) logging
+- lateral movement (SMB, WinRM and WMI) logging
 - scheduled task logging
 - sensitive registry key access auditing
 ```
