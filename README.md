@@ -28,6 +28,8 @@ ansible-playbook main.yml
 3. Create dashboards and visualizations to assist you with threat hunting
   - Given a process ID, can you get a full process tree? Can you see what other processes were created by that one?
 
+See [Windows Event Codes Reference](#Windows%20Event%20Codes%20Reference)
+
 ### Planned Improvements
 - Ingest Palo Alto, Cisco FTP, and VyOS logs
 - Using the Splunk Stream add-on, collect network events
@@ -138,3 +140,64 @@ SMTP and POP3 logs
 Splunk logs
 - /opt/splunk/var/log/splunk/splunkd_ui_access.log
 - also consider checking other logs provided in the _internal index
+
+## Windows Event Codes Reference
+#### Logon / Logoff
+* **4624** — Successful logon
+* **4625** — Failed logon
+* **4634** — Logoff
+* **4647** — User-initiated logoff
+* **4672** — Special privileges assigned to logon
+
+#### RDP Connections
+* **4624** — Successful logon (`LogonType=10`)
+* **4634 / 4647** — Logoff
+* **1149** — RDP authentication succeeded
+* **21** — Session logon succeeded
+* **24** — Session disconnected
+* **25** — Session reconnected
+
+#### WinRM Connections
+* **4624** — Successful logon (`LogonType=3`)
+* **4625** — Failed logon
+* **6** — WinRM session created
+* **142** — WSMan connection accepted
+
+#### SMB Connections
+* **4624** — Network logon (`LogonType=3`)
+* **5140** — Network share accessed
+* **5145** — Detailed file share access (object-level)
+* **30803** — SMB client connection
+
+#### Scheduled Tasks
+* **4698** — Task created
+* **4699** — Task deleted
+* **4700** — Task enabled
+* **4701** — Task disabled
+* **4702** — Task updated
+* **106** — Task registered
+* **140** — Task updated
+* **141** — Task deleted
+
+#### Services
+* **4697** — Service installed
+* **7045** — Service installed
+* **7036** — Service start/stop
+* **7040** — Service startup type changed
+
+#### Registry Access
+* **4656** — Handle requested
+* **4657** — Registry value modified
+* **4658** — Handle closed
+* **4663** — Registry object accessed
+
+#### File Creation / Modification / Deletion
+* **4656** — Handle requested
+* **4663** — File accessed (read/write/delete)
+* **4659** — Handle requested with delete intent
+* **4660** — Object deleted
+
+#### Processes and Permissions
+* **4688** — Process creation
+* **4689** — Process exit
+* **4670** — Permissions changed (files/registry)
