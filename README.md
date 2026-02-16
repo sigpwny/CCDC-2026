@@ -43,6 +43,8 @@ See [Windows Event IDs Reference](#Windows-Event-IDs-Reference)
 - Ingest Palo Alto, Cisco FTP, and VyOS logs
 - Using the Splunk Stream add-on, collect network events
   - Replace current DNS logging with this, since the logs aren't properly parsed
+- Incorporate potential methods for tying network traffic to process ID
+  - bcc/bpftrace and Sysmon event ID 3
 
 ## What You Get
 All of the following data will be forwarded and available for you to view in Splunk.
