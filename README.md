@@ -29,7 +29,7 @@ ansible-playbook main.yml
 1. Create alerts for stopping scored services
 2. Create alerts for changes to files required by scored services
 3. Create dashboards and visualizations to assist you with threat hunting
-    - Given a process ID, can you get a full process tree? Can you see what other processes were created by that one?
+    - Given a process ID, can you get a full process tree? Can you see other processes created by that one?
 
 See [Windows Event IDs Reference](#Windows%20Event%20IDs%20Reference)
 
