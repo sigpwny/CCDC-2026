@@ -13,7 +13,7 @@ pipx inject ansible pywinrm
 ansible-galaxy collection install ansible.windows community.windows
 ```
 2. Modify IP addresses and credentials in your [hosts file](inventory/testing/hosts) as necessary
-  - For simplicity sake, these scripts do not use a vault to store credentials, since these are already disclosed in the team packet.
+    - For simplicity sake, these scripts do not use a vault to store credentials, since these are already disclosed in the team packet.
 
 3. Validate connectivity to hosts
 ```bash
