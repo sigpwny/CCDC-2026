@@ -32,7 +32,7 @@ ansible-playbook main.yml
 1. Create alerts for stopping scored services
 2. Create alerts for changes to files required by scored services
 3. (optional) Consider setting up Sysmon to get important events, such as Network events (ID 3)
-    - This would let you tie processes to network events, which is helpful for spotting beacons.
+    - This would let you tie processes to network events, which is helpful for identifying beaconing processes.
 5. (optional) Create alerts for logins or access through various lateral movement methods
 6. Create dashboards and visualizations to assist you with threat hunting
     - Given a process ID, can you get a full process tree? Can you see other processes created by that one?
