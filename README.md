@@ -31,7 +31,7 @@ ansible-playbook main.yml
 3. Create dashboards and visualizations to assist you with threat hunting
   - Given a process ID, can you get a full process tree? Can you see what other processes were created by that one?
 
-See [Windows Event Codes Reference](#Windows%20Event%20Codes%20Reference)
+See [Windows Event IDs Reference](#Windows%20Event%20IDs%20Reference)
 
 ### Planned Improvements
 - Ingest Palo Alto, Cisco FTP, and VyOS logs
@@ -144,7 +144,7 @@ Splunk logs
 - /opt/splunk/var/log/splunk/splunkd_ui_access.log
 - also consider checking other logs provided in the _internal index
 
-## Windows Event Codes Reference
+## Windows Event IDs Reference
 #### Logon / Logoff
 * **4624** — Successful logon
 * **4625** — Failed logon
