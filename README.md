@@ -142,7 +142,7 @@ SMTP and POP3 logs
 
 Splunk logs
 - /opt/splunk/var/log/splunk/splunkd_ui_access.log
-- also consider checking other logs provided in the _internal index
+- also consider checking other logs provided in the **_internal** index
 
 ## Windows Event IDs Reference
 #### Logon / Logoff
