@@ -133,10 +133,10 @@ DNS logs
 - C:\Windows\System32\dns\dns*.log
 
 Web logs
-- C:\inetpub\logs\LogFiles\W3SVC*\*.log
+- C:\inetpub\logs\LogFiles\W3SVC*\\*.log
 
 FTP logs
-- C:\inetpub\logs\LogFiles\FTPSVC*\*.log
+- C:\inetpub\logs\LogFiles\FTPSVC*\\*.log
 
 E-commerce (OpenCart) logs
 - /var/log/apache2/access.log
