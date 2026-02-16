@@ -42,9 +42,9 @@ See [Windows Event IDs Reference](#Windows-Event-IDs-Reference)
 All of the following data will be forwarded and available for you to view in Splunk.
 
 There are three indexes you'll have access to:
-- linux - everything related to Linux hosts
-- windows - everything related to Windows hosts
-- services - everything related to scored services
+- **linux** — everything related to Linux hosts
+- **windows** — everything related to Windows hosts
+- **services** — everything related to scored services
 
 ### Linux
 _See [linux-inputs.conf](files/linux-inputs.conf)_
