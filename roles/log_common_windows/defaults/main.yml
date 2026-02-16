@@ -1,0 +1,33 @@
+force_subcategories: true
+
+logon_success: true
+logon_failure: true
+
+other_object_access_success: true
+other_object_access_failure: true
+
+security_system_extension_success: true
+security_system_extension_failure: true
+
+winrm_operational_log: true
+wmi_activity_operational_log: true
+taskscheduler_operational_log: true
+
+registry_success: true
+registry_failure: true
+
+registry_principal: Everyone
+registry_rights: FullControl
+
+registry_inheritance:
+  - ContainerInherit
+  - ObjectInherit
+
+registry_keys:
+  - HKLM:\SAM
+  - HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\JD
+  - HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\Skew1
+  - HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\GBG
+  - HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\Data
+#  - HKLM:\SYSTEM
+#  - HKLM:\SECURITY

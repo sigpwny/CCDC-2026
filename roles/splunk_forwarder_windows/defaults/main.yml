@@ -1,0 +1,23 @@
+ansible_team: "{{ [(ansible_host.split('.')[-2] | int) - 20, 1] | max }}"
+ansible_hostname: "{{ (group_names | intersect(['dns','web','ftp']) | first) }}"
+
+splunk_version: 10.0.2
+splunk_build: e2d18b4767e9
+
+installer_msi_name: "splunkforwarder-{{ splunk_version }}-{{ splunk_build }}-windows-x64.msi"
+installer_url: "https://download.splunk.com/products/universalforwarder/releases/{{ splunk_version }}/windows/{{ installer_msi_name }}"
+
+installer_dest: 'C:\Windows\Temp\splunkforwarder.msi'
+install_dir: 'C:\Program Files\SplunkUniversalForwarder'
+
+#indexer_ip: "172.25.{{ ansible_team+20 }}.9"
+indexer_ip: 172.20.242.20
+indexer_port: 9997
+
+splunk_user: admin
+splunk_pass: changeme
+
+windows_ta_archives:
+  - splunk-add-on-for-microsoft-windows_912.zip
+  - splunk-add-on-for-sysmon_500.zip
+  - splunk-add-on-for-microsoft-iis_200.zip

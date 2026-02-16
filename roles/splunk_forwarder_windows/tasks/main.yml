@@ -1,0 +1,69 @@
+- name: Check if Splunk UF is installed
+  ansible.windows.win_stat:
+    path: "{{ install_dir }}\\bin\\splunk.exe"
+  register: uf_bin
+
+- name: Ensure Splunk UF installer is present on target (only when needed)
+  ansible.windows.win_get_url:
+    url: "{{ installer_url }}"
+    dest: "{{ installer_dest }}"
+  when: not uf_bin.stat.exists
+
+- name: Install Splunk Universal Forwarder (only when needed)
+  ansible.windows.win_package:
+    path: "{{ installer_dest }}"
+    arguments: >-
+      AGREETOLICENSE=Yes
+      INSTALLDIR="{{ install_dir }}"
+      SPLUNKUSERNAME={{ splunk_user }}
+      SPLUNKPASSWORD={{ splunk_pass }}
+      RECEIVING_INDEXER={{ indexer_ip }}:{{ indexer_port }}
+    state: present
+  when: not uf_bin.stat.exists
+
+- name: Ensure local config directory exists
+  ansible.windows.win_file:
+    path: "{{ install_dir }}\\etc\\system\\local"
+    state: directory
+
+- name: Deploy inputs.conf
+  ansible.windows.win_copy:
+    src: windows-inputs.conf
+    dest: "{{ install_dir }}\\etc\\system\\local\\inputs.conf"
+  notify: Restart SplunkForwarder
+
+- name: Deploy server.conf
+  ansible.windows.win_template:
+    src: server.conf.j2
+    dest: "{{ install_dir }}\\etc\\system\\local\\server.conf"
+  notify: Restart SplunkForwarder
+
+- name: Ensure TA staging directory exists
+  ansible.windows.win_file:
+    path: C:\Windows\Temp\splunk_tas
+    state: directory
+
+- name: Stage TA zip archives
+  ansible.windows.win_copy:
+    src: "{{ item }}"
+    dest: "C:\\Windows\\Temp\\splunk_tas\\{{ item }}"
+  loop: "{{ windows_ta_archives }}"
+
+- name: Install/Update TAs into etc/apps
+  community.windows.win_unzip:
+    src: "C:\\Windows\\Temp\\splunk_tas\\{{ item }}"
+    dest: "{{ install_dir }}\\etc\\apps"
+    delete_archive: true
+  loop: "{{ windows_ta_archives }}"
+  notify: Restart SplunkForwarder
+
+- name: Ensure SplunkForwarder service is enabled
+  ansible.windows.win_service:
+    name: SplunkForwarder
+    start_mode: auto
+
+- name: Remove installer (cleanup)
+  ansible.windows.win_file:
+    path: "{{ installer_dest }}"
+    state: absent
+  when: not uf_bin.stat.exists

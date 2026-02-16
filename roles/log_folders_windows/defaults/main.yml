@@ -1,0 +1,23 @@
+audit_folders:
+  - 'C:\FTPSVC'
+
+folders_success: true
+folders_failure: true
+
+audit_user: Everyone
+
+audit_rights:
+  - write
+  - delete
+  - changepermissions
+  - takeownership
+
+audit_flags:
+  - success
+  - failure
+
+inheritance_flags:
+  - ContainerInherit
+  - ObjectInherit
+
+force_subcategories: true

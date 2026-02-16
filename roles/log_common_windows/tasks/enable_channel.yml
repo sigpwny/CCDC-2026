@@ -1,0 +1,10 @@
+- name: Query channel state (wevtutil get-log)
+  ansible.windows.win_command: >-
+    wevtutil gl "{{ item.name }}"
+  register: channel_gl
+  changed_when: false
+
+- name: Enable channel if disabled
+  ansible.windows.win_command: >-
+    wevtutil sl "{{ item.name }}" /e:true
+  when: "'enabled: false' in channel_gl.stdout | lower"

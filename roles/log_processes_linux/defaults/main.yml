@@ -1,0 +1,2 @@
+rule_key: processes
+rule_file: /etc/audit/rules.d/processes.rules

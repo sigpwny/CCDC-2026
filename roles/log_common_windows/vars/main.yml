@@ -1,0 +1,9 @@
+event_channels:
+  - name: "Microsoft-Windows-WinRM/Operational"
+    enabled_var: "winrm_operational_log"
+    
+  - name: "Microsoft-Windows-WMI-Activity/Operational"
+    enabled_var: "wmi_activity_operational_log"
+    
+  - name: "Microsoft-Windows-TaskScheduler/Operational"
+    enabled_var: "taskscheduler_operational_log"

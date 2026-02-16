@@ -1,0 +1,21 @@
+splunk_home: /opt/splunk
+splunk_bin: "{{ splunk_home }}/bin/splunk"
+
+splunk_user: admin
+splunk_pass: changeme
+
+splunk_port: 9997
+
+splunk_indexes:
+  - linux
+  - windows
+  - network
+  - services
+
+splunk_ta_archives:
+  - splunk-add-on-for-microsoft-windows_912.tgz
+  - splunk-add-on-for-sysmon_500.tgz
+  - splunk-add-on-for-microsoft-iis_200.tgz
+  - splunk-add-on-for-apache-web-server_221.tgz
+  - splunk-add-on-for-mysql_320.tgz
+  - splunk-add-on-for-palo-alto-networks_300.tgz

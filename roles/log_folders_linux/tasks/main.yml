@@ -1,0 +1,19 @@
+- name: Determine audit package name
+  ansible.builtin.package_facts:
+
+- name: Install audit package if missing
+  ansible.builtin.package:
+    name: "{{ 'audit' if 'audit' in ansible_facts.packages else 'auditd' }}"
+    state: present
+
+- name: Ensure folder audit rules are present
+  ansible.builtin.copy:
+    dest: "{{ rule_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      {% for p in audit_folders %}
+      -a always,exit -F dir={{ p }} -F perm=w -k {{ rule_key }}
+      {% endfor %}
+  notify: Load audit rules

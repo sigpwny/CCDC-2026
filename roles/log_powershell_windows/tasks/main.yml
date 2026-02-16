@@ -1,0 +1,46 @@
+- name: Enable PowerShell Script Block Logging
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging
+    name: EnableScriptBlockLogging
+    data: 1
+    type: dword
+
+- name: Enable PowerShell Module Logging
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging
+    name: EnableModuleLogging
+    data: 1
+    type: dword
+
+- name: Configure Module Logging for all modules
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging\ModuleNames
+    name: "*"
+    data: "*"
+    type: string
+
+- name: Enable PowerShell Transcription
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription
+    name: EnableTranscripting
+    data: 1
+    type: dword
+
+- name: Set transcription output directory
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription
+    name: OutputDirectory
+    data: C:\ProgramData\PSTranscripts
+    type: string
+
+- name: Include invocation headers in transcripts
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription
+    name: EnableInvocationHeader
+    data: 1
+    type: dword
+
+- name: Ensure transcript directory exists
+  ansible.windows.win_file:
+    path: C:\ProgramData\PSTranscripts
+    state: directory

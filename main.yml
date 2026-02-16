@@ -1,0 +1,73 @@
+- name: Splunk Configuration
+  hosts: splunk
+  become: true
+  gather_facts: false
+  roles:
+    - splunk_configure
+    
+- name: OpenCart Folder Logging - Ecom
+  hosts: ecom
+  become: true
+  gather_facts: false
+  vars:
+    audit_folders:
+      - /var/www/html/opencart/upload
+  roles:
+    - log_folders_linux
+
+- name: Logging - Linux
+  hosts: linux
+  become: true
+  gather_facts: false
+  roles:
+    - log_processes_linux
+
+- name: Splunk Forwarder - Linux
+  hosts:
+    - ecom
+    - mail
+  become: true
+  gather_facts: false
+  roles:
+    - splunk_forwarder_linux
+
+- name: DNS Logging - AD/DNS
+  hosts: dns
+  gather_facts: false
+  roles:
+    - log_dns_file_windows
+    - log_dns_etw_windows
+
+- name: FTPSVC Folder Logging - FTP
+  hosts: ftp
+  gather_facts: false
+  vars:
+    audit_folders:
+      - 'C:\FTPSITE'
+  roles:
+    - log_folders_windows
+
+- name: wwwroot Folder Logging - Web
+  hosts: web
+  gather_facts: false
+  vars:
+    audit_folders:
+      - 'C:\inetpub\wwwroot'
+  roles:
+    - log_folders_windows
+
+- name: Logging - Windows
+  hosts: windows
+  gather_facts: false
+  roles:
+    - log_powershell_windows
+    - log_processes_windows
+    - log_common_windows
+    - splunk_forwarder_windows
+
+#- name: Windows fixes
+#  hosts: localhost
+#  gather_facts: false
+#  tasks:
+#    - name: Run Windows forwarder fix script
+#      ansible.builtin.command: ./scripts/fix-windows.sh

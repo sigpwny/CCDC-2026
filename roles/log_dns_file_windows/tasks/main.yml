@@ -1,0 +1,47 @@
+- name: Ensure DNS log directory exists
+  ansible.windows.win_file:
+    path: "{{ dns_log_path | win_dirname }}"
+    state: directory
+
+- name: Read current DNS diagnostics settings
+  ansible.windows.win_powershell:
+    script: |
+      $c = Get-DnsServerDiagnostics
+      [pscustomobject]@{
+        EnableLoggingToFile   = [bool]$c.EnableLoggingToFile
+        LogFilePath           = [string]$c.LogFilePath
+        EnableLogFileRollover = [bool]$c.EnableLogFileRollover
+        FullPackets           = [bool]$c.FullPackets
+        ReceivePackets         = [bool]$c.ReceivePackets
+        UdpPackets            = [bool]$c.UdpPackets
+        Queries               = [bool]$c.Queries
+        QuestionTransactions  = [bool]$c.QuestionTransactions
+      } | ConvertTo-Json -Compress
+  register: dns_diag_raw
+  changed_when: false
+
+- name: Parse DNS diagnostics settings
+  ansible.builtin.set_fact:
+    dns_diag: "{{ (dns_diag_raw.output | last) | from_json }}"
+
+- name: Configure DNS debug logging for queries (only if needed)
+  ansible.windows.win_powershell:
+    script: |
+      Set-DnsServerDiagnostics `
+        -EnableLoggingToFile $true `
+        -LogFilePath "{{ dns_log_path }}" `
+        -EnableLogFileRollover $true `
+        -FullPackets $true `
+        -ReceivePackets $true `
+        -UdpPackets $true `
+        -Queries $true `
+        -QuestionTransactions $true
+  when: >
+    (not dns_diag.EnableLoggingToFile) or
+    ((dns_diag.LogFilePath | lower) != (dns_log_path | lower)) or
+    (not dns_diag.EnableLogFileRollover) or
+    (not dns_diag.FullPackets) or
+    (not dns_diag.ReceivePackets) or
+    (not dns_diag.UdpPackets) or
+    (not dns_diag.Queries) or
+    (not dns_diag.QuestionTransactions)

@@ -1,0 +1,21 @@
+ansible_team: "{{ [(ansible_host.split('.')[-2] | int) - 20, 1] | max }}"
+ansible_hostname: "{{ (group_names | intersect(['ecom','mail']) | first) }}"
+
+splunk_version: 10.0.2
+splunk_build: e2d18b4767e9
+
+installer_tgz_name: "splunkforwarder-{{ splunk_version }}-{{ splunk_build }}-linux-amd64.tgz"
+installer_url: "https://download.splunk.com/products/universalforwarder/releases/{{ splunk_version }}/linux/{{ installer_tgz_name }}"
+
+installer_dest: /tmp/splunkforwarder.tgz
+install_dir: /opt/splunkforwarder
+
+indexer_ip: 172.20.242.20
+indexer_port: 9997
+
+splunk_user: admin
+splunk_pass: changeme
+
+linux_ta_archives:
+  - splunk-add-on-for-apache-web-server_221.tgz
+  - splunk-add-on-for-mysql_320.tgz

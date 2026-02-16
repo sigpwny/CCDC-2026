@@ -1,0 +1,30 @@
+- name: Configure advanced audit policy subcategory enforcement
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: SCENoApplyLegacyAuditPolicy
+    data: "{{ 1 if force_subcategories else 0 }}"
+    type: dword
+
+- name: Audit File System
+  ansible.windows.win_audit_policy_system:
+    subcategory: File System
+    audit_type:
+      - "{% if folders_success %}success{% endif %}"
+      - "{% if folders_failure %}failure{% endif %}"
+
+- name: Ensure target directories exist
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ audit_folders }}"
+
+- name: Apply SACL on directories
+  ansible.windows.win_audit_rule:
+    path: "{{ item }}"
+    user: "{{ audit_user }}"
+    rights: "{{ audit_rights }}"
+    audit_flags: "{{ audit_flags }}"
+    inheritance_flags: "{{ inheritance_flags }}"
+    propagation_flags: None
+    state: present
+  loop: "{{ audit_folders }}"

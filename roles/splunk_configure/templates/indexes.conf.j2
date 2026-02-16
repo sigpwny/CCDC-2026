@@ -1,0 +1,7 @@
+{% for idx in splunk_indexes %}
+[{{ idx }}]
+homePath   = $SPLUNK_DB/{{ idx }}/db
+coldPath   = $SPLUNK_DB/{{ idx }}/colddb
+thawedPath = $SPLUNK_DB/{{ idx }}/thaweddb
+
+{% endfor %}

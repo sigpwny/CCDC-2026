@@ -1,0 +1,39 @@
+- name: Audit Logon (RDP/WinRM interactive & network logons)
+  ansible.windows.win_audit_policy_system:
+    subcategory: Logon
+    audit_type:
+      - "{% if logon_success %}success{% endif %}"
+      - "{% if logon_failure %}failure{% endif %}"
+
+- name: Audit Other Object Access Events (scheduled tasks in Security log)
+  ansible.windows.win_audit_policy_system:
+    subcategory: "Other Object Access Events"
+    audit_type:
+      - "{% if other_object_access_success %}success{% endif %}"
+      - "{% if other_object_access_failure %}failure{% endif %}"
+
+- name: Audit Security System Extension (service install in Security log)
+  ansible.windows.win_audit_policy_system:
+    subcategory: "Security System Extension"
+    audit_type:
+      - "{% if security_system_extension_success %}success{% endif %}"
+      - "{% if security_system_extension_failure %}failure{% endif %}"
+
+- name: Audit Registry (SAM, SYSTEM, SECURITY dumping)
+  ansible.windows.win_audit_policy_system:
+    subcategory: Registry
+    audit_type:
+      - "{% if registry_success %}success{% endif %}"
+      - "{% if registry_failure %}failure{% endif %}"
+
+- name: Add SACL auditing rules for sensitive registry keys
+  ansible.windows.win_audit_rule:
+    path: "{{ item }}"
+    user: "{{ registry_principal }}"
+    rights: "{{ registry_rights }}"
+    audit_flags:
+      - success
+      - failure
+    inheritance_flags: "{{ registry_inheritance }}"
+    state: present
+  loop: "{{ registry_keys }}"

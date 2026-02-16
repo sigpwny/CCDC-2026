@@ -1,0 +1,38 @@
+- name: Remove nftables rules
+  ansible.builtin.command: nft flush ruleset
+  changed_when: false
+
+- name: Ensure Splunk configs are present
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ splunk_home }}/etc/system/local/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - { src: "indexes.conf.j2",       dest: "indexes.conf" }
+    - { src: "splunk-inputs.conf.j2", dest: "inputs.conf" }
+  notify: Restart Splunk
+
+- name: Ensure TA staging directory exists
+  ansible.builtin.file:
+    path: /tmp/splunk_tas
+    state: directory
+    mode: "0755"
+
+- name: Stage TA archives
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/tmp/splunk_tas/{{ item | basename }}"
+    mode: "0644"
+  loop: "{{ splunk_ta_archives }}"
+
+- name: Install/Update TAs into etc/apps
+  ansible.builtin.unarchive:
+    src: "/tmp/splunk_tas/{{ item | basename }}"
+    dest: "{{ splunk_home }}/etc/apps"
+    remote_src: true
+    owner: splunk
+    group: splunk
+  loop: "{{ splunk_ta_archives }}"
+  notify: Restart Splunk

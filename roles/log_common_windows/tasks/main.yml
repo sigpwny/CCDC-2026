@@ -1,0 +1,14 @@
+- name: Configure advanced audit policy subcategory enforcement
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Lsa
+    name: SCENoApplyLegacyAuditPolicy
+    data: "{{ 1 if force_subcategories else 0 }}"
+    type: dword
+
+- name: Configure audit policies
+  ansible.builtin.import_tasks: audit_policy.yml
+
+- name: Ensure operational event channels are enabled
+  ansible.builtin.include_tasks: enable_channel.yml
+  loop: "{{ event_channels }}"
+  when: (lookup('vars', item.enabled_var) | default(false)) | bool

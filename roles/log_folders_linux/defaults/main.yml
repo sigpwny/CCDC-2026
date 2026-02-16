@@ -1,0 +1,5 @@
+rule_key: folders
+rule_file: /etc/audit/rules.d/folders.rules
+
+audit_folders:
+  - /var/www/html/opencart/upload

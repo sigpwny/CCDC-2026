@@ -1,0 +1,17 @@
+[Unit]
+Description=Splunk Universal Forwarder
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+ExecStart={{ install_dir }}/bin/splunk start --accept-license --answer-yes --no-prompt
+ExecStop={{ install_dir }}/bin/splunk stop
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
