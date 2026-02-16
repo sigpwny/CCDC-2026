@@ -7,7 +7,7 @@ If you find this helpful and would like to show your support, give this a star a
 Credit to Sam from Southeast Missouri State University for providing his Splunk setup and configuration scripts as reference.
 
 ## Deployment
-1. Install Ansible and required collections
+1. Install Ansible and required collections (eg. on Ubuntu Workstation)
 ```bash
 sudo apt install python3-pip
 pipx ensurepath
