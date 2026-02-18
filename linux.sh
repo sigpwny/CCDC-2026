@@ -54,14 +54,12 @@ for dir in "${homedirs_plus_root[@]}"; do
 done
 
 # Change root, sysadmin password
+# Prompt user for new password
+echo "Enter new password for root:"
+read -s root_passwd
 
-# Generate random passwords
-function gen_passwd() {
-    tr -dc 'A-Za-z0-9!@#$%,./' < /dev/urandom | head -c 16
-}
-
-root_passwd=$(gen_passwd)
-sysadmin_passwd=$(gen_passwd)
+echo "Enter new password for sysadmin:"
+read -s sysadmin_passwd
 
 echo "Changing root password to: $root_passwd"
 echo "Changing sysadmin password to: $sysadmin_passwd"
