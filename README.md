@@ -20,7 +20,7 @@ Ideas:
     - To save time on the inject
 - Beacon hunter
     - This one is really important, maybe spool output via scheduled task like hollow hunter
-- Unfucker (TM)
+- Fix GPOs
     - Restores GPOs and registry keys that destroy Windows Defender / Firewall / Updates
 - Site Backups
     - Should we back up websites? FTP configs? Anything we missed?
