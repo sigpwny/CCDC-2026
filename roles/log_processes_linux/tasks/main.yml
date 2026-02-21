@@ -7,12 +7,14 @@
     state: present
 
 - name: Ensure execve audit rules are present (b32 + b64)
-  ansible.builtin.copy:
-    dest: "{{ rule_file }}"
+  ansible.builtin.blockinfile:
+    path: "{{ rule_file }}"
+    create: true
     owner: root
     group: root
     mode: "0640"
-    content: |
-      -a exit,always -F arch=b32 -S execve -k {{ rule_key }}
-      -a exit,always -F arch=b64 -S execve -k {{ rule_key }}
+    marker: "# {mark} PROCESS AUDIT RULES"
+    block: |
+      -a always,exit -F arch=b32 -S execve -k {{ rule_key }}
+      -a always,exit -F arch=b64 -S execve -k {{ rule_key }}
   notify: Load audit rules

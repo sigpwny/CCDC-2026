@@ -7,12 +7,14 @@
     state: present
 
 - name: Ensure folder audit rules are present
-  ansible.builtin.copy:
-    dest: "{{ rule_file }}"
+  ansible.builtin.blockinfile:
+    path: "{{ rule_file }}"
+    create: true
     owner: root
     group: root
     mode: "0640"
-    content: |
+    marker: "# {mark} ANSIBLE MANAGED FOLDER AUDIT RULES"
+    block: |
       {% for p in audit_folders %}
       -a always,exit -F dir={{ p }} -F perm=w -k {{ rule_key }}
       {% endfor %}
