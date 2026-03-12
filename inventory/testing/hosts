@@ -37,20 +37,22 @@ ftp
 workstation
 
 [splunk:vars]
-ansible_password=changemenow
-ansible_become_password=changemenow
-ansible_become_method=su
+ansible_connection=ssh
+ansible_user=sysadmin
+ansible_password=changeme123
+ansible_become_method=sudo
+ansible_become_password=changeme123
 
 [linux:vars]
 ansible_connection=ssh
 ansible_user=sysadmin
-ansible_password=changeme
+ansible_password=changeme123
 ansible_become_method=sudo
-ansible_become_password=changeme
+ansible_become_password=changeme123
 
 [windows:vars]
 ansible_user=Administrator
-ansible_password=!Password123
+ansible_password=Changeme123
 ansible_connection=winrm
 ansible_winrm_port=5985
 ansible_winrm_transport=ntlm
@@ -60,7 +62,7 @@ ansible_shell_type=powershell
 ansible_connection=local
 ansible_python_interpreter=/usr/bin/python3
 pa_username=admin
-pa_password=Changeme123
+pa_password=RetardationPremium420$
 
 [vyos:vars]
 ansible_connection=network_cli
