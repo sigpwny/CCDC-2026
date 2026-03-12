@@ -11,7 +11,8 @@ installer_dest: 'C:\Windows\Temp\splunkforwarder.msi'
 install_dir: 'C:\Program Files\SplunkUniversalForwarder'
 
 #indexer_ip: "172.25.{{ ansible_team+20 }}.9"
-indexer_ip: 172.20.242.20
+# indexer_ip: 172.20.242.20
+indexer_ip: 10.0.0.20
 indexer_port: 9997
 
 splunk_user: admin

@@ -10,7 +10,7 @@ installer_url: "https://download.splunk.com/products/universalforwarder/releases
 installer_dest: /tmp/splunkforwarder.tgz
 install_dir: /opt/splunkforwarder
 
-indexer_ip: 172.20.242.20
+indexer_ip: 10.0.0.20
 indexer_port: 9997
 
 splunk_user: admin
