@@ -1,0 +1,9 @@
+- name: Restart wazuh-manager
+  ansible.builtin.systemd:
+    name: wazuh-manager
+    state: restarted
+
+- name: Restart splunkforwarder
+  ansible.builtin.service:
+    name: splunkforwarder
+    state: restarted

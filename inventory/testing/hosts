@@ -19,6 +19,13 @@
 [workstation]
 172.25.40.144
 
+[paloalto]
+172.25.40.1
+172.25.40.2
+
+[vyos]
+172.25.40.3
+
 [linux:children]
 ecom
 mail
@@ -28,6 +35,7 @@ splunk
 dns
 web
 ftp
+workstation
 
 [splunk:vars]
 ansible_password=changemenow
@@ -48,3 +56,15 @@ ansible_connection=winrm
 ansible_winrm_port=5985
 ansible_winrm_transport=ntlm
 ansible_shell_type=powershell
+
+[paloalto:vars]
+ansible_connection=local
+ansible_python_interpreter=/usr/bin/python3
+pa_username=admin
+pa_password=Changeme123
+
+[vyos:vars]
+ansible_connection=network_cli
+ansible_network_os=vyos.vyos.vyos
+ansible_user=vyos
+ansible_password=vyos

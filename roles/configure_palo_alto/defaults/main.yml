@@ -1,0 +1,4 @@
+splunk_ip: "{{ hostvars[groups['splunk'][0]]['ansible_host'] }}"
+splunk_syslog_port: 5514
+pa_username: admin
+pa_password: Changeme123

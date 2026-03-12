@@ -1,0 +1,7 @@
+clamav_scan_dirs:
+  - 'C:\Users'
+  - 'C:\Windows\Temp'
+  - 'C:\inetpub'
+clamav_log_file: 'C:\ProgramData\ClamAV\clamscan.log'
+clamav_install_dir: 'C:\Program Files\ClamAV'
+clamav_scan_interval_hours: 4

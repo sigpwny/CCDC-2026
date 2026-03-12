@@ -1,0 +1,64 @@
+# Palo Alto syslog forwarding via PAN-OS API
+# Requires: ansible-galaxy collection install paloaltonetworks.panos
+# If the collection is not available, configure manually via PA web UI:
+#   Device > Server Profiles > Syslog > Add
+#   Objects > Log Forwarding > Add (match all log types)
+#   Commit
+
+- name: Create syslog server profile
+  paloaltonetworks.panos.panos_syslog_server:
+    provider:
+      ip_address: "{{ ansible_host }}"
+      username: "{{ pa_username }}"
+      password: "{{ pa_password }}"
+    name: Splunk
+    syslog_host: "{{ splunk_ip }}"
+    syslog_port: "{{ splunk_syslog_port }}"
+    transport: UDP
+    syslog_format: BSD
+    facility: LOG_USER
+  ignore_errors: true
+
+- name: Create log forwarding profile
+  paloaltonetworks.panos.panos_log_forwarding_profile:
+    provider:
+      ip_address: "{{ ansible_host }}"
+      username: "{{ pa_username }}"
+      password: "{{ pa_password }}"
+    name: Forward-to-Splunk
+    enhanced_logging: true
+  ignore_errors: true
+
+- name: Add traffic log match to forwarding profile
+  paloaltonetworks.panos.panos_log_forwarding_profile_match_list:
+    provider:
+      ip_address: "{{ ansible_host }}"
+      username: "{{ pa_username }}"
+      password: "{{ pa_password }}"
+    log_forwarding_profile: Forward-to-Splunk
+    name: "traffic-logs"
+    log_type: traffic
+    syslog_profiles:
+      - Splunk
+  ignore_errors: true
+
+- name: Add threat log match to forwarding profile
+  paloaltonetworks.panos.panos_log_forwarding_profile_match_list:
+    provider:
+      ip_address: "{{ ansible_host }}"
+      username: "{{ pa_username }}"
+      password: "{{ pa_password }}"
+    log_forwarding_profile: Forward-to-Splunk
+    name: "threat-logs"
+    log_type: threat
+    syslog_profiles:
+      - Splunk
+  ignore_errors: true
+
+- name: Commit configuration
+  paloaltonetworks.panos.panos_commit_firewall:
+    provider:
+      ip_address: "{{ ansible_host }}"
+      username: "{{ pa_username }}"
+      password: "{{ pa_password }}"
+  ignore_errors: true

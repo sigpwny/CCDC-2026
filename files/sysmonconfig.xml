@@ -1,0 +1,210 @@
+<!--
+  CCDC Sysmon Configuration
+  Based on SwiftOnSecurity sysmon-config with CCDC-specific tuning:
+  - NetworkConnect (EID 3) in EXCLUDE mode to catch all C2/beaconing
+  - ProcessAccess (EID 10) focused on lsass.exe for credential dumping
+  - DNSQuery (EID 22) enabled for per-process DNS resolution tracking
+-->
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+  <CheckRevocation>false</CheckRevocation>
+
+  <EventFiltering>
+
+    <!-- Event ID 1: Process Creation - Log all, exclude noise -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\backgroundTaskHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\RuntimeBroker.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchProtocolHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchFilterHost.exe</Image>
+        <Image condition="is">C:\Windows\SystemApps\Microsoft.Windows.Cortana_cw5n1h2txyewy\SearchUI.exe</Image>
+        <ParentImage condition="is">C:\Windows\System32\SgrmBroker.exe</ParentImage>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Event ID 2: File Creation Time Changed -->
+    <RuleGroup name="" groupRelation="or">
+      <FileCreateTime onmatch="include">
+        <TargetFilename condition="contains">\Start Menu</TargetFilename>
+        <TargetFilename condition="contains">\Startup\</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+        <TargetFilename condition="end with">.scr</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.cmd</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.js</TargetFilename>
+      </FileCreateTime>
+    </RuleGroup>
+
+    <!-- Event ID 3: Network Connections - EXCLUDE mode to catch C2 -->
+    <RuleGroup name="" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Reduce noise from known-good system processes -->
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <Image condition="end with">splunkd.exe</Image>
+        <Image condition="end with">splunk-MonitorNoHandle.exe</Image>
+        <Image condition="is">C:\Program Files\SplunkUniversalForwarder\bin\splunkd.exe</Image>
+        <DestinationPort condition="is">5355</DestinationPort>
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <SourcePortName condition="is">llmnr</SourcePortName>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Event ID 5: Process Terminated -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessTerminate onmatch="include">
+        <Image condition="begin with">C:\Users</Image>
+        <Image condition="begin with">C:\Windows\Temp</Image>
+        <Image condition="begin with">C:\Temp</Image>
+      </ProcessTerminate>
+    </RuleGroup>
+
+    <!-- Event ID 6: Driver Loaded -->
+    <RuleGroup name="" groupRelation="or">
+      <DriverLoad onmatch="exclude">
+        <Signature condition="contains">microsoft</Signature>
+        <Signature condition="contains">windows</Signature>
+      </DriverLoad>
+    </RuleGroup>
+
+    <!-- Event ID 7: Image Loaded - Focus on suspicious DLL loads -->
+    <RuleGroup name="" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <ImageLoaded condition="contains">\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains">\Users\</ImageLoaded>
+        <ImageLoaded condition="contains">\AppData\</ImageLoaded>
+        <ImageLoaded condition="contains">\Downloads\</ImageLoaded>
+        <Signed condition="is">false</Signed>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- Event ID 8: CreateRemoteThread - Process injection detection -->
+    <RuleGroup name="" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\lsass.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\services.exe</SourceImage>
+        <SourceImage condition="end with">\Google\Chrome\Application\chrome.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- Event ID 9: RawAccessRead -->
+    <RuleGroup name="" groupRelation="or">
+      <RawAccessRead onmatch="include">
+        <Image condition="contains">\Temp\</Image>
+        <Image condition="contains">\Users\</Image>
+      </RawAccessRead>
+    </RuleGroup>
+
+    <!-- Event ID 10: Process Access - Credential dumping detection -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+        <TargetImage condition="is">C:\Windows\System32\csrss.exe</TargetImage>
+        <TargetImage condition="is">C:\Windows\System32\winlogon.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Event ID 11: File Create -->
+    <RuleGroup name="" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\Start Menu</TargetFilename>
+        <TargetFilename condition="contains">\Startup\</TargetFilename>
+        <TargetFilename condition="contains">\Content.Outlook\</TargetFilename>
+        <TargetFilename condition="contains">\Downloads\</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.cmd</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.js</TargetFilename>
+        <TargetFilename condition="end with">.hta</TargetFilename>
+        <TargetFilename condition="end with">.lnk</TargetFilename>
+        <TargetFilename condition="end with">.scr</TargetFilename>
+        <TargetFilename condition="end with">.sys</TargetFilename>
+        <TargetFilename condition="contains">C:\inetpub</TargetFilename>
+        <TargetFilename condition="contains">C:\FTPSITE</TargetFilename>
+        <TargetFilename condition="contains">C:\Windows\System32\Tasks</TargetFilename>
+        <TargetFilename condition="contains">C:\Windows\System32\drivers</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- Event ID 12,13,14: Registry Events -->
+    <RuleGroup name="" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\Image File Execution Options</TargetObject>
+        <TargetObject condition="contains">\CurrentControlSet\Services</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\Winlogon</TargetObject>
+        <TargetObject condition="contains">\Policies\Microsoft\Windows\System\Scripts</TargetObject>
+        <TargetObject condition="contains">\CurrentControlSet\Control\Lsa</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\System</TargetObject>
+        <TargetObject condition="contains">\Environment\</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\App Paths</TargetObject>
+        <TargetObject condition="contains">\AppInit_DLLs</TargetObject>
+        <TargetObject condition="contains">\SAM\</TargetObject>
+        <TargetObject condition="contains">\Security\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Event ID 15: FileCreateStreamHash - Alternate Data Streams -->
+    <RuleGroup name="" groupRelation="or">
+      <FileCreateStreamHash onmatch="include">
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.cmd</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.hta</TargetFilename>
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+    <!-- Event ID 17,18: Pipe Events -->
+    <RuleGroup name="" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="begin with">\PSHost</PipeName>
+        <PipeName condition="begin with">\msagent_</PipeName>
+        <PipeName condition="begin with">\MSSE-</PipeName>
+        <PipeName condition="is">\lsarpc</PipeName>
+        <PipeName condition="is">\samr</PipeName>
+        <PipeName condition="is">\srvsvc</PipeName>
+        <PipeName condition="is">\atsvc</PipeName>
+        <PipeName condition="is">\epmapper</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- Event ID 19,20,21: WMI Events -->
+    <RuleGroup name="" groupRelation="or">
+      <WmiEvent onmatch="include" />
+    </RuleGroup>
+
+    <!-- Event ID 22: DNS Query - Log all, exclude noise -->
+    <RuleGroup name="" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <QueryName condition="end with">.arpa</QueryName>
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- Event ID 23: File Delete -->
+    <RuleGroup name="" groupRelation="or">
+      <FileDelete onmatch="include">
+        <TargetFilename condition="contains">C:\inetpub</TargetFilename>
+        <TargetFilename condition="contains">C:\FTPSITE</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+      </FileDelete>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>

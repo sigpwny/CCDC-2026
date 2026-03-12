@@ -1,0 +1,108 @@
+<dashboard version="1.1">
+  <label>Service Health</label>
+  <description>Scored service availability and last-seen timestamps</description>
+
+  <fieldset submitButton="true">
+    <input type="time" token="time_range">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <title>Last Event Per Host (Silence = Problem)</title>
+      <table>
+        <search>
+          <query>index=windows OR index=linux OR index=services
+| stats latest(_time) as last_event count by host
+| eval last_event_time = strftime(last_event, "%Y-%m-%d %H:%M:%S")
+| eval minutes_ago = round((now() - last_event) / 60, 1)
+| eval status = if(minutes_ago > 5, "SILENT", "OK")
+| table host, last_event_time, minutes_ago, count, status
+| sort -minutes_ago</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Scored Service Logs (Apache/IIS/DNS/FTP/Mail)</title>
+      <chart>
+        <search>
+          <query>index=services
+| timechart span=5m count by sourcetype</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Service Changes (7045, 7036, 7040)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:System" (EventCode=7045 OR EventCode=7036 OR EventCode=7040)
+| table _time, host, EventCode, Message
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>IIS Requests</title>
+      <table>
+        <search>
+          <query>index=services sourcetype="ms:iis:auto"
+| stats count by host, cs_method, sc_status, cs_uri_stem
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Apache Requests</title>
+      <table>
+        <search>
+          <query>index=services sourcetype="apache:access"
+| stats count by host, method, status, uri_path
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>DNS Query Logs</title>
+      <table>
+        <search>
+          <query>index=services sourcetype="ms:dns:debug"
+| head 50
+| table _time, host, _raw</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+</dashboard>

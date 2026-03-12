@@ -1,0 +1,4 @@
+- name: Restart Splunk
+  ansible.builtin.service:
+    name: splunk
+    state: restarted

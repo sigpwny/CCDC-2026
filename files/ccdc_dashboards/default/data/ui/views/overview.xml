@@ -1,0 +1,104 @@
+<dashboard version="1.1">
+  <label>CCDC Overview</label>
+  <description>High-level security overview across all hosts</description>
+
+  <row>
+    <panel>
+      <title>Events Per Index (Last 15m)</title>
+      <chart>
+        <search>
+          <query>index=windows OR index=linux OR index=services OR index=network
+| timechart span=1m count by index</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.stackMode">stacked</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Host Activity (Last 15m)</title>
+      <chart>
+        <search>
+          <query>index=windows OR index=linux
+| stats count by host
+| sort -count</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Failed Logins (Last 1h)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4625
+| stats count by host, Account_Name, Source_Network_Address
+| sort -count</query>
+          <earliest>-1h</earliest>
+          <latest>now</latest>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>New Processes (Last 15m)</title>
+      <single>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=1
+| stats count</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Network Connections (Last 15m)</title>
+      <single>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3
+| stats count</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+      </single>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Recent Alerts (Sigma)</title>
+      <table>
+        <search>
+          <query>index=windows OR index=linux
+| search sourcetype="WinEventLog:Sysmon" OR sourcetype="WinEventLog:Security"
+| head 50
+| table _time, host, sourcetype, EventCode, Image, CommandLine, User</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Wazuh Alerts (Last 1h)</title>
+      <table>
+        <search>
+          <query>index=linux sourcetype="wazuh:alerts:json"
+| spath
+| table _time, rule.description, rule.level, agent.name, data.srcip
+| sort -_time</query>
+          <earliest>-1h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

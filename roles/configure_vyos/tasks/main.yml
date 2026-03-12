@@ -1,0 +1,6 @@
+- name: Configure syslog forwarding to Splunk
+  vyos.vyos.vyos_config:
+    lines:
+      - set system syslog host {{ splunk_ip }} facility all level info
+      - set system syslog host {{ splunk_ip }} protocol udp
+    save: true

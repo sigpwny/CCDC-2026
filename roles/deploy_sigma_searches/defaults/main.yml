@@ -1,0 +1,2 @@
+splunk_home: /opt/splunk
+sigma_app_name: sigma_alerts

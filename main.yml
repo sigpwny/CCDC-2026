@@ -1,35 +1,54 @@
+# =============================================================================
+# CCDC Defender Toolkit - Main Playbook
+# =============================================================================
+# Deploys comprehensive monitoring, detection, and endpoint protection.
+# Run: ansible-playbook main.yml
+# =============================================================================
+
+# ---- Phase 1: Splunk Indexer Setup (must be first) ----
+
 - name: Splunk Configuration
   hosts: splunk
   become: true
   gather_facts: false
   roles:
     - splunk_configure
-    
-- name: OpenCart Folder Logging - Ecom
-  hosts: ecom
-  become: true
-  gather_facts: false
-  vars:
-    audit_folders:
-      - /var/www/html/opencart/upload
-  roles:
-    - log_folders_linux
+  tags: [splunk, indexer]
 
-- name: Logging - Linux
-  hosts: linux
+- name: Sigma Detection Rules - Splunk
+  hosts: splunk
   become: true
   gather_facts: false
   roles:
-    - log_processes_linux
+    - deploy_sigma_searches
+  tags: [splunk, sigma]
 
-- name: Splunk Forwarder - Linux
-  hosts:
-    - ecom
-    - mail
+- name: CCDC Dashboards - Splunk
+  hosts: splunk
   become: true
   gather_facts: false
   roles:
-    - splunk_forwarder_linux
+    - deploy_splunk_dashboards
+  tags: [splunk, dashboards]
+
+# ---- Phase 2: Wazuh Server (before agents) ----
+
+- name: Wazuh Server
+  hosts: splunk
+  become: true
+  gather_facts: false
+  roles:
+    - deploy_wazuh_server
+  tags: [wazuh, wazuh-server]
+
+# ---- Phase 3: Windows Endpoint Setup ----
+
+- name: Sysmon - Windows
+  hosts: windows
+  gather_facts: false
+  roles:
+    - deploy_sysmon_windows
+  tags: [sysmon, windows]
 
 - name: DNS Logging - AD/DNS
   hosts: dns
@@ -37,6 +56,7 @@
   roles:
     - log_dns_file_windows
     - log_dns_etw_windows
+  tags: [logging, dns, windows]
 
 - name: FTPSVC Folder Logging - FTP
   hosts: ftp
@@ -46,6 +66,7 @@
       - 'C:\FTPSITE'
   roles:
     - log_folders_windows
+  tags: [logging, ftp, windows]
 
 - name: wwwroot Folder Logging - Web
   hosts: web
@@ -55,6 +76,7 @@
       - 'C:\inetpub\wwwroot'
   roles:
     - log_folders_windows
+  tags: [logging, web, windows]
 
 - name: Logging - Windows
   hosts: windows
@@ -64,3 +86,85 @@
     - log_processes_windows
     - log_common_windows
     - splunk_forwarder_windows
+  tags: [logging, splunk-forwarder, windows]
+
+- name: ClamAV - Windows
+  hosts: windows
+  gather_facts: false
+  roles:
+    - deploy_clamav_windows
+  tags: [clamav, windows]
+
+- name: Wazuh Agent - Windows
+  hosts: windows
+  gather_facts: false
+  roles:
+    - deploy_wazuh_agent_windows
+  tags: [wazuh, wazuh-agent, windows]
+
+# ---- Phase 4: Linux Endpoint Setup ----
+
+- name: OpenCart Folder Logging - Ecom
+  hosts: ecom
+  become: true
+  gather_facts: false
+  vars:
+    audit_folders:
+      - /var/www/html/opencart/upload
+  roles:
+    - log_folders_linux
+  tags: [logging, ecom, linux]
+
+- name: Logging - Linux
+  hosts: linux
+  become: true
+  gather_facts: false
+  roles:
+    - log_processes_linux
+  tags: [logging, linux]
+
+- name: Splunk Forwarder - Linux
+  hosts:
+    - ecom
+    - mail
+  become: true
+  gather_facts: false
+  roles:
+    - splunk_forwarder_linux
+  tags: [splunk-forwarder, linux]
+
+- name: ClamAV - Linux
+  hosts:
+    - ecom
+    - mail
+  become: true
+  gather_facts: false
+  roles:
+    - deploy_clamav_linux
+  tags: [clamav, linux]
+
+- name: Wazuh Agent - Linux
+  hosts:
+    - ecom
+    - mail
+  become: true
+  gather_facts: false
+  roles:
+    - deploy_wazuh_agent_linux
+  tags: [wazuh, wazuh-agent, linux]
+
+# ---- Phase 5: Network Devices ----
+
+- name: VyOS Syslog Forwarding
+  hosts: vyos
+  gather_facts: false
+  roles:
+    - configure_vyos
+  tags: [network, vyos]
+
+- name: Palo Alto Syslog Forwarding
+  hosts: paloalto
+  gather_facts: false
+  roles:
+    - configure_palo_alto
+  tags: [network, paloalto]

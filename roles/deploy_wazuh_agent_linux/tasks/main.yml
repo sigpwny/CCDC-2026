@@ -1,0 +1,40 @@
+- name: Check if Wazuh agent is installed
+  ansible.builtin.stat:
+    path: /var/ossec/bin/wazuh-agentd
+  register: wazuh_agent_installed
+
+- name: Add Wazuh GPG key
+  ansible.builtin.apt_key:
+    url: "{{ wazuh_repo_key_url }}"
+    state: present
+  when: not wazuh_agent_installed.stat.exists
+
+- name: Add Wazuh repository
+  ansible.builtin.apt_repository:
+    repo: "{{ wazuh_repo_url }}"
+    state: present
+    filename: wazuh
+  when: not wazuh_agent_installed.stat.exists
+
+- name: Install Wazuh agent
+  ansible.builtin.apt:
+    name: wazuh-agent
+    state: present
+    update_cache: true
+  environment:
+    WAZUH_MANAGER: "{{ wazuh_manager_ip }}"
+  when: not wazuh_agent_installed.stat.exists
+
+- name: Ensure manager IP is configured
+  ansible.builtin.lineinfile:
+    path: /var/ossec/etc/ossec.conf
+    regexp: '<address>.*</address>'
+    line: '      <address>{{ wazuh_manager_ip }}</address>'
+    backrefs: true
+  notify: Restart wazuh-agent
+
+- name: Enable and start Wazuh agent
+  ansible.builtin.systemd:
+    name: wazuh-agent
+    enabled: true
+    state: started

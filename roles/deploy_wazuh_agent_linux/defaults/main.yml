@@ -1,0 +1,5 @@
+wazuh_repo_key_url: "https://packages.wazuh.com/key/GPG-KEY-WAZUH"
+wazuh_repo_url: "deb https://packages.wazuh.com/4.x/apt/ stable main"
+
+# Default: Wazuh manager runs on the Splunk box
+wazuh_manager_ip: "{{ hostvars[groups['splunk'][0]]['ansible_host'] }}"

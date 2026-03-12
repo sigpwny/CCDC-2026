@@ -1,0 +1,6 @@
+wazuh_version: "4.9.0-1"
+wazuh_msi_url: "https://packages.wazuh.com/4.x/windows/wazuh-agent-{{ wazuh_version }}.msi"
+wazuh_msi_dest: 'C:\Windows\Temp\wazuh-agent.msi'
+
+# Default: Wazuh manager runs on the Splunk box
+wazuh_manager_ip: "{{ hostvars[groups['splunk'][0]]['ansible_host'] }}"

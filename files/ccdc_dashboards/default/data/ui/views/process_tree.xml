@@ -1,0 +1,134 @@
+<dashboard version="1.1">
+  <label>Process Tree</label>
+  <description>Process creation, parent-child relationships, and command lines via Sysmon EID 1</description>
+
+  <fieldset submitButton="true">
+    <input type="dropdown" token="host_filter">
+      <label>Host</label>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <search>
+        <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=1
+| stats count by host | fields host</query>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+    </input>
+    <input type="text" token="process_filter">
+      <label>Process Name Filter</label>
+      <default>*</default>
+    </input>
+    <input type="text" token="cmdline_filter">
+      <label>Command Line Contains</label>
+      <default>*</default>
+    </input>
+    <input type="time" token="time_range">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <title>Process Creation Events</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=1 host=$host_filter$
+| search Image="*$process_filter$*" CommandLine="*$cmdline_filter$*"
+| table _time, host, User, ParentImage, ParentCommandLine, Image, CommandLine, ProcessId, ParentProcessId, Hashes
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">50</option>
+        <option name="wrap">false</option>
+        <drilldown>
+          <set token="selected_pid">$row.ProcessId$</set>
+          <set token="selected_host">$row.host$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+
+  <row depends="$selected_pid$">
+    <panel>
+      <title>Child Processes of PID $selected_pid$ on $selected_host$</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=1 host=$selected_host$ ParentProcessId=$selected_pid$
+| table _time, User, Image, CommandLine, ProcessId
+| sort _time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>Network Connections by PID $selected_pid$ on $selected_host$</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3 host=$selected_host$ ProcessId=$selected_pid$
+| table _time, Image, SourceIp, SourcePort, DestinationIp, DestinationPort, Protocol
+| sort _time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Suspicious Process Patterns</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=1 host=$host_filter$
+| search (ParentImage="*cmd.exe" OR ParentImage="*powershell.exe" OR ParentImage="*wscript.exe" OR ParentImage="*mshta.exe" OR ParentImage="*wmiprvse.exe" OR ParentImage="*services.exe" OR ParentImage="*svchost.exe" OR ParentImage="*taskeng.exe" OR ParentImage="*w3wp.exe")
+| where NOT match(Image, "(?i)(conhost\.exe|splunkd\.exe)")
+| table _time, host, User, ParentImage, Image, CommandLine
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Process Creation (Event ID 4688)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4688 host=$host_filter$
+| table _time, host, Account_Name, Creator_Process_Name, New_Process_Name, Process_Command_Line, New_Process_ID, Creator_Process_ID
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">50</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Linux Process Creation (auditd execve)</title>
+      <table>
+        <search>
+          <query>index=linux sourcetype="linux:audit" type=EXECVE
+| table _time, host, a0, a1, a2, a3
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">50</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

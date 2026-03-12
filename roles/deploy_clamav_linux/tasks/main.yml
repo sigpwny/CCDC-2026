@@ -1,0 +1,51 @@
+- name: Install ClamAV packages
+  ansible.builtin.apt:
+    name:
+      - clamav
+      - clamav-daemon
+      - clamav-freshclam
+    state: present
+    update_cache: true
+
+- name: Stop freshclam service for manual update
+  ansible.builtin.systemd:
+    name: clamav-freshclam
+    state: stopped
+  changed_when: false
+  ignore_errors: true
+
+- name: Update ClamAV signatures
+  ansible.builtin.command: freshclam
+  changed_when: false
+  ignore_errors: true
+
+- name: Enable and start freshclam auto-updater
+  ansible.builtin.systemd:
+    name: clamav-freshclam
+    enabled: true
+    state: started
+
+- name: Enable and start ClamAV daemon
+  ansible.builtin.systemd:
+    name: clamav-daemon
+    enabled: true
+    state: started
+
+- name: Ensure ClamAV log directory exists
+  ansible.builtin.file:
+    path: "{{ clamav_log_file | dirname }}"
+    state: directory
+    owner: clamav
+    group: clamav
+    mode: "0755"
+
+- name: Deploy scheduled scan cron job
+  ansible.builtin.cron:
+    name: "ClamAV scheduled scan"
+    minute: "{{ clamav_scan_schedule.split(' ')[0] }}"
+    hour: "{{ clamav_scan_schedule.split(' ')[1] }}"
+    day: "{{ clamav_scan_schedule.split(' ')[2] }}"
+    month: "{{ clamav_scan_schedule.split(' ')[3] }}"
+    weekday: "{{ clamav_scan_schedule.split(' ')[4] }}"
+    job: "/usr/bin/clamscan -r --infected --log={{ clamav_log_file }} {{ clamav_scan_dirs | join(' ') }} 2>&1"
+    user: root

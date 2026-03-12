@@ -1,0 +1,2 @@
+splunk_home: /opt/splunk
+dashboard_app_name: ccdc_dashboards

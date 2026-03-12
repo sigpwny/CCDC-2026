@@ -1,0 +1,132 @@
+<dashboard version="1.1">
+  <label>Authentication</label>
+  <description>All logins, failed attempts, and authentication events across Windows and Linux</description>
+
+  <fieldset submitButton="true">
+    <input type="time" token="time_range">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <title>Failed Logins Over Time</title>
+      <chart>
+        <search>
+          <query>(index=windows sourcetype="WinEventLog:Security" EventCode=4625)
+OR (index=linux sourcetype=linux_secure "Failed")
+| timechart span=5m count by host</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Successful vs Failed Logins</title>
+      <chart>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" (EventCode=4624 OR EventCode=4625)
+| eval status=if(EventCode=4624, "Success", "Failed")
+| stats count by status</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Successful Logins by Type</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4624
+| eval LogonTypeDesc=case(
+    Logon_Type="2", "Interactive (console)",
+    Logon_Type="3", "Network (SMB/WinRM)",
+    Logon_Type="4", "Batch",
+    Logon_Type="5", "Service",
+    Logon_Type="7", "Unlock",
+    Logon_Type="8", "NetworkCleartext",
+    Logon_Type="9", "NewCredentials",
+    Logon_Type="10", "RemoteInteractive (RDP)",
+    Logon_Type="11", "CachedInteractive",
+    1=1, "Other (".Logon_Type.")")
+| stats count by host, Account_Name, Logon_Type, LogonTypeDesc, Source_Network_Address
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Failed Logins</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4625
+| stats count by host, Account_Name, Source_Network_Address, Failure_Reason
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Special Privileges Assigned (4672)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4672
+| stats count by host, Account_Name
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Linux Authentication Events</title>
+      <table>
+        <search>
+          <query>index=linux sourcetype=linux_secure
+| rex "(?i)(Accepted|Failed)\s+(?P&lt;auth_method&gt;\S+)\s+for\s+(?P&lt;username&gt;\S+)\s+from\s+(?P&lt;src_ip&gt;\S+)"
+| where isnotnull(username)
+| stats count by host, username, src_ip, auth_method
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>RDP Sessions (LogonType 10)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4624 Logon_Type=10
+| table _time, host, Account_Name, Source_Network_Address
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+</dashboard>

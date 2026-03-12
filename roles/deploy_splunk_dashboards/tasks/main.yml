@@ -1,0 +1,9 @@
+- name: Deploy CCDC dashboards app
+  ansible.builtin.copy:
+    src: ccdc_dashboards/
+    dest: "{{ splunk_home }}/etc/apps/{{ dashboard_app_name }}/"
+    owner: splunk
+    group: splunk
+    mode: "0644"
+    directory_mode: "0755"
+  notify: Restart Splunk

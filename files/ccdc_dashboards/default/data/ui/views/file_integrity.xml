@@ -1,0 +1,109 @@
+<dashboard version="1.1">
+  <label>File Integrity</label>
+  <description>File and registry changes on monitored directories and sensitive keys</description>
+
+  <fieldset submitButton="true">
+    <input type="time" token="time_range">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <title>Windows File Changes (Sysmon EID 11 - FileCreate)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=11
+| table _time, host, Image, TargetFilename, CreationUtcTime
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Windows Audit - File Access (4663)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4663
+| table _time, host, Account_Name, Object_Name, Access_Mask, Process_Name
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Registry Modifications (4657)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4657
+| table _time, host, Account_Name, Object_Name, Object_Value_Name, New_Value
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Sysmon Registry Changes (EID 13)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=13
+| table _time, host, Image, EventType, TargetObject, Details
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Linux Audit - File Writes (auditd)</title>
+      <table>
+        <search>
+          <query>index=linux sourcetype="linux:audit" type=SYSCALL (syscall=2 OR syscall=257)
+| table _time, host, auid, uid, exe, key
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Wazuh File Integrity Alerts</title>
+      <table>
+        <search>
+          <query>index=linux sourcetype="wazuh:alerts:json"
+| spath
+| where match(rule.groups{}, "syscheck")
+| table _time, agent.name, rule.description, syscheck.path, syscheck.event, syscheck.diff
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

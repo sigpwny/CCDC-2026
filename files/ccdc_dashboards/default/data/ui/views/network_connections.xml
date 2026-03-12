@@ -1,0 +1,141 @@
+<dashboard version="1.1">
+  <label>Network Connections</label>
+  <description>Process-to-network correlation via Sysmon EID 3 and firewall logs</description>
+
+  <fieldset submitButton="true">
+    <input type="dropdown" token="host_filter">
+      <label>Host</label>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <search>
+        <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3
+| stats count by host | fields host</query>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+    </input>
+    <input type="time" token="time_range">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <title>Top Destination IPs (Sysmon)</title>
+      <chart>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3 host=$host_filter$
+| stats count by DestinationIp
+| sort -count
+| head 20</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Top Destination Ports</title>
+      <chart>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3 host=$host_filter$
+| stats count by DestinationPort
+| sort -count
+| head 20</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Outbound Connections by Process</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3 host=$host_filter$ Initiated="true"
+| stats count values(DestinationIp) as dest_ips dc(DestinationIp) as unique_dests by host, Image
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Potential Beaconing (Regular Interval Connections)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3 host=$host_filter$ Initiated="true"
+| stats count avg(_time) as avg_time stdev(_time) as stdev_time range(_time) as time_range by host, Image, DestinationIp, DestinationPort
+| where count > 5 AND stdev_time > 0
+| eval regularity = round(stdev_time / (time_range / count), 2)
+| where regularity < 0.5
+| sort regularity
+| table host, Image, DestinationIp, DestinationPort, count, regularity</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>All Network Connections (Detailed)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=3 host=$host_filter$
+| table _time, host, User, Image, Protocol, SourceIp, SourcePort, DestinationIp, DestinationPort, Initiated
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">50</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>DNS Queries by Process (Sysmon EID 22)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=22 host=$host_filter$
+| stats count by host, Image, QueryName
+| sort -count</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Palo Alto / Network Firewall Logs</title>
+      <table>
+        <search>
+          <query>index=network
+| head 100
+| table _time, host, sourcetype, _raw</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

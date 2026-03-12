@@ -5,6 +5,28 @@
 disabled = 0
 
 # -----------------------------------------------------------------------------
+# Syslog from Network Devices (Palo Alto, VyOS)
+# -----------------------------------------------------------------------------
+
+[udp://514]
+disabled = 0
+index = network
+sourcetype = syslog
+connection_host = ip
+
+[tcp://514]
+disabled = 0
+index = network
+sourcetype = syslog
+connection_host = ip
+
+[udp://5514]
+disabled = 0
+index = network
+sourcetype = pan:log
+connection_host = ip
+
+# -----------------------------------------------------------------------------
 # Testing
 # -----------------------------------------------------------------------------
 
@@ -96,4 +118,22 @@ crcSalt = <SOURCE>
 [monitor:///opt/splunk/var/log/splunk/splunkd_ui_access.log]
 index = services
 sourcetype = splunkd_ui_access
+crcSalt = <SOURCE>
+
+# -----------------------------------------------------------------------------
+# Wazuh Alerts (if Wazuh manager is co-located)
+# -----------------------------------------------------------------------------
+
+[monitor:///var/ossec/logs/alerts/alerts.json]
+index = linux
+sourcetype = wazuh:alerts:json
+crcSalt = <SOURCE>
+
+# -----------------------------------------------------------------------------
+# ClamAV Scan Logs
+# -----------------------------------------------------------------------------
+
+[monitor:///var/log/clamav/clamscan.log]
+index = linux
+sourcetype = clamav
 crcSalt = <SOURCE>

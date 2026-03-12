@@ -1,0 +1,3 @@
+sysmon_service_name: Sysmon64
+sysmon_url: "https://download.sysinternals.com/files/Sysmon.zip"
+sysmon_staging_dir: 'C:\Windows\Temp\sysmon'

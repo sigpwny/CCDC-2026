@@ -1,0 +1,10 @@
+wazuh_version: "4.9"
+wazuh_repo_key_url: "https://packages.wazuh.com/key/GPG-KEY-WAZUH"
+wazuh_repo_url: "deb https://packages.wazuh.com/4.x/apt/ stable main"
+
+wazuh_manager_port: 1514
+wazuh_registration_port: 1515
+wazuh_api_port: 55000
+
+# Splunk integration — forward Wazuh alerts via Splunk UF
+wazuh_alerts_log: /var/ossec/logs/alerts/alerts.json

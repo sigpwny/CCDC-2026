@@ -1,0 +1,9 @@
+<nav>
+  <view name="overview" default="true" />
+  <view name="process_tree" />
+  <view name="authentication" />
+  <view name="network_connections" />
+  <view name="lateral_movement" />
+  <view name="service_health" />
+  <view name="file_integrity" />
+</nav>

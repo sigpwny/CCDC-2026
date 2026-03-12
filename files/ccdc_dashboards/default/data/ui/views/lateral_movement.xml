@@ -1,0 +1,161 @@
+<dashboard version="1.1">
+  <label>Lateral Movement</label>
+  <description>RDP, WinRM, SMB, PsExec, WMI, scheduled tasks, and service installation detection</description>
+
+  <fieldset submitButton="true">
+    <input type="time" token="time_range">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+
+  <row>
+    <panel>
+      <title>Network Logins (Type 3) - SMB/WinRM/WMI</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4624 Logon_Type=3
+| where NOT match(Account_Name, "(?i)(ANONYMOUS LOGON|\$|DWM-|UMFD-)")
+| table _time, host, Account_Name, Source_Network_Address, Authentication_Package
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+    <panel>
+      <title>RDP Logins (Type 10)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4624 Logon_Type=10
+| table _time, host, Account_Name, Source_Network_Address
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>WinRM Sessions</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:WinRM"
+| table _time, host, EventCode, Message
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+    <panel>
+      <title>WMI Activity</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:WMI"
+| table _time, host, EventCode, Message
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>SMB Share Access (5140/5145)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" (EventCode=5140 OR EventCode=5145)
+| table _time, host, Account_Name, Source_Address, Share_Name, Relative_Target_Name, Access_Mask
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">30</option>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Service Installations (PsExec Indicator)</title>
+      <table>
+        <search>
+          <query>(index=windows sourcetype="WinEventLog:Security" EventCode=4697)
+OR (index=windows sourcetype="WinEventLog:System" EventCode=7045)
+| table _time, host, EventCode, Account_Name, Service_Name, Service_File_Name, Service_Type, Service_Start_Type
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>Scheduled Task Creation (4698)</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Security" EventCode=4698
+| table _time, host, Account_Name, Task_Name, Task_Content
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Sysmon CreateRemoteThread (EID 8) - Process Injection</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=8
+| table _time, host, SourceImage, TargetImage, SourceProcessId, TargetProcessId, StartFunction
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>Sysmon Process Access (EID 10) - Credential Dumping</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:Sysmon" EventCode=10
+| where match(TargetImage, "(?i)lsass\.exe")
+| table _time, host, SourceImage, TargetImage, GrantedAccess, SourceProcessId
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>PowerShell Script Block Logging - Suspicious Keywords</title>
+      <table>
+        <search>
+          <query>index=windows sourcetype="WinEventLog:PowerShell" EventCode=4104
+| search ScriptBlockText IN ("*Invoke-Mimikatz*", "*Invoke-Expression*", "*DownloadString*", "*IEX*", "*Net.WebClient*", "*Start-Process*", "*Invoke-Command*", "*Enter-PSSession*", "*New-PSSession*", "*Invoke-WmiMethod*", "*-EncodedCommand*", "*FromBase64*", "*bypass*")
+| table _time, host, ScriptBlockText
+| sort -_time</query>
+          <earliest>$time_range.earliest$</earliest>
+          <latest>$time_range.latest$</latest>
+        </search>
+        <option name="count">20</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

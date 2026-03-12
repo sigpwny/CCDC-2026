@@ -1,0 +1,7 @@
+clamav_scan_dirs:
+  - /home
+  - /tmp
+  - /var/tmp
+  - /var/www
+clamav_scan_schedule: "0 */4 * * *"
+clamav_log_file: /var/log/clamav/clamscan.log

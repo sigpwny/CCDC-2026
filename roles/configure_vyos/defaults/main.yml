@@ -1,0 +1,1 @@
+splunk_ip: "{{ hostvars[groups['splunk'][0]]['ansible_host'] }}"

@@ -1,0 +1,20 @@
+- name: Copy self-contained ClamAV deploy script
+  ansible.windows.win_copy:
+    src: deploy-clamav.ps1
+    dest: 'C:\Windows\Temp\deploy-clamav.ps1'
+
+- name: Run ClamAV deploy script
+  ansible.windows.win_powershell:
+    script: '& C:\Windows\Temp\deploy-clamav.ps1'
+  register: clamav_result
+  ignore_errors: true
+
+- name: Show ClamAV deploy output
+  ansible.builtin.debug:
+    var: clamav_result.host_out
+  when: clamav_result.host_out | default('') | length > 0
+
+- name: Cleanup deploy script
+  ansible.windows.win_file:
+    path: 'C:\Windows\Temp\deploy-clamav.ps1'
+    state: absent

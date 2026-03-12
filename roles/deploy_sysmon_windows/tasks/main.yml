@@ -1,0 +1,48 @@
+- name: Check if Sysmon service exists
+  ansible.windows.win_service_info:
+    name: "{{ sysmon_service_name }}"
+  register: sysmon_svc
+
+- name: Ensure staging directory exists
+  ansible.windows.win_file:
+    path: "{{ sysmon_staging_dir }}"
+    state: directory
+
+- name: Download Sysmon zip
+  ansible.windows.win_get_url:
+    url: "{{ sysmon_url }}"
+    dest: "{{ sysmon_staging_dir }}\\Sysmon.zip"
+  when: not (sysmon_svc.services | default([]) | length > 0)
+
+- name: Extract Sysmon archive
+  community.windows.win_unzip:
+    src: "{{ sysmon_staging_dir }}\\Sysmon.zip"
+    dest: "{{ sysmon_staging_dir }}"
+    delete_archive: true
+  when: not (sysmon_svc.services | default([]) | length > 0)
+
+- name: Deploy Sysmon configuration
+  ansible.windows.win_copy:
+    src: sysmonconfig.xml
+    dest: "{{ sysmon_staging_dir }}\\sysmonconfig.xml"
+
+- name: Install Sysmon
+  ansible.windows.win_command:
+    cmd: '"{{ sysmon_staging_dir }}\Sysmon64.exe" -accepteula -i "{{ sysmon_staging_dir }}\sysmonconfig.xml"'
+  when: not (sysmon_svc.services | default([]) | length > 0)
+
+- name: Update Sysmon configuration
+  ansible.windows.win_command:
+    cmd: '"{{ sysmon_staging_dir }}\Sysmon64.exe" -c "{{ sysmon_staging_dir }}\sysmonconfig.xml"'
+  when: sysmon_svc.services | default([]) | length > 0
+
+- name: Ensure Sysmon service is running
+  ansible.windows.win_service:
+    name: "{{ sysmon_service_name }}"
+    start_mode: auto
+    state: started
+
+- name: Cleanup staging directory
+  ansible.windows.win_file:
+    path: "{{ sysmon_staging_dir }}"
+    state: absent
