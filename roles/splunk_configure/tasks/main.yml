@@ -50,3 +50,10 @@
     group: splunk
   loop: "{{ splunk_ta_archives }}"
   notify: Restart Splunk
+
+- name: Enable Splunk receiver on port {{ splunk_port }}
+  ansible.builtin.command:
+    cmd: "{{ splunk_bin }} enable listen {{ splunk_port }} -auth {{ splunk_user }}:{{ splunk_pass }}"
+  register: enable_listen
+  changed_when: "'already enabled' not in enable_listen.stdout"
+  failed_when: enable_listen.rc != 0 and 'already enabled' not in enable_listen.stdout
