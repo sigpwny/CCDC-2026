@@ -6,11 +6,11 @@
     cmd: dnf install -y python3-libdnf5
   register: libdnf_result
   changed_when: "'already installed' not in libdnf_result.stdout"
-  when: ansible_pkg_mgr in ['dnf', 'yum']
+  when: ansible_os_family == 'RedHat'
 
 - name: Install audit package if missing
   ansible.builtin.package:
-    name: "{{ 'audit' if ansible_pkg_mgr in ['dnf', 'yum'] else 'auditd' }}"
+    name: "{{ 'audit' if ansible_os_family == 'RedHat' else 'auditd' }}"
     state: present
 
 - name: Ensure execve audit rules are present (b32 + b64)
