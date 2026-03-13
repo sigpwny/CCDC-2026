@@ -1,2 +1,5 @@
 indexer_ip: 10.0.0.20
 indexer_port: 9997
+
+splunk_user: admin
+splunk_pass: changeme123
