@@ -11,7 +11,7 @@
 
 - name: Ensure Splunk is started
   ansible.builtin.command:
-    cmd: "{{ splunk_bin }} start --accept-license --answer-yes --no-prompt"
+    cmd: "{{ splunk_bin }} start --accept-license --answer-yes --no-prompt --run-as-root"
   register: splunk_start
   changed_when: "'already running' not in splunk_start.stdout"
   failed_when: splunk_start.rc != 0 and 'already running' not in splunk_start.stdout
