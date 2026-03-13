@@ -2,6 +2,17 @@
   ansible.builtin.command: nft flush ruleset
   changed_when: false
 
+- name: Enable Splunk boot-start (register systemd service)
+  ansible.builtin.command:
+    cmd: "{{ splunk_bin }} enable boot-start --accept-license --answer-yes --no-prompt"
+    creates: /etc/systemd/system/Splunkd.service
+
+- name: Ensure Splunk is started
+  ansible.builtin.systemd:
+    name: Splunkd
+    state: started
+    daemon_reload: true
+
 - name: Ensure Splunk configs are present
   ansible.builtin.template:
     src: "{{ item.src }}"
