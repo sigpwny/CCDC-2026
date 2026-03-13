@@ -2,6 +2,14 @@
   ansible.builtin.command: nft flush ruleset
   changed_when: false
 
+- name: Open firewalld port for Splunk receiver
+  ansible.posix.firewalld:
+    port: "{{ splunk_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  ignore_errors: true
+
 - name: Enable Splunk boot-start
   ansible.builtin.command:
     cmd: "{{ splunk_bin }} enable boot-start --accept-license --answer-yes --no-prompt -systemd-managed 0"
@@ -55,5 +63,5 @@
   ansible.builtin.command:
     cmd: "{{ splunk_bin }} enable listen {{ splunk_port }} -auth {{ splunk_user }}:{{ splunk_pass }}"
   register: enable_listen
-  changed_when: "'already enabled' not in enable_listen.stdout"
-  failed_when: enable_listen.rc != 0 and 'already enabled' not in enable_listen.stdout
+  changed_when: "'already exists' not in enable_listen.stderr"
+  failed_when: enable_listen.rc != 0 and 'already exists' not in enable_listen.stderr
