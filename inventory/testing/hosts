@@ -1,23 +1,29 @@
 [ecom]
-172.25.40.11
+10.0.0.30
 
 [mail]
-172.25.40.39
+10.0.0.40
 
 [splunk]
-172.25.40.9
+10.0.0.20
 
 [dns]
-172.25.40.155
+10.0.0.100 ansible_user=Administrator ansible_password=ChangeMe123!
 
 [web]
-172.25.40.140
+10.0.0.101
 
 [ftp]
-172.25.40.162
+10.0.0.103
 
 [workstation]
-172.25.40.144
+10.0.0.104 ansible_user=sigpwny ansible_password=password
+
+[paloalto]
+10.0.0.1
+
+[vyos]
+192.168.69.1
 
 [linux:children]
 ecom
@@ -28,23 +34,38 @@ splunk
 dns
 web
 ftp
+workstation
 
 [splunk:vars]
-ansible_password=changemenow
-ansible_become_password=changemenow
-ansible_become_method=su
+ansible_connection=ssh
+ansible_user=sysadmin
+ansible_password=changeme123
+ansible_become_method=sudo
+ansible_become_password=changeme123
 
 [linux:vars]
 ansible_connection=ssh
 ansible_user=sysadmin
-ansible_password=changeme
+ansible_password=changeme123
 ansible_become_method=sudo
-ansible_become_password=changeme
+ansible_become_password=changeme123
 
 [windows:vars]
 ansible_user=Administrator
-ansible_password=!Password123
+ansible_password=Changeme123
 ansible_connection=winrm
 ansible_winrm_port=5985
 ansible_winrm_transport=ntlm
 ansible_shell_type=powershell
+
+[paloalto:vars]
+ansible_connection=local
+ansible_python_interpreter=/usr/bin/python3
+pa_username=admin
+pa_password=RetardationPremium420$
+
+[vyos:vars]
+ansible_connection=network_cli
+ansible_network_os=vyos.vyos.vyos
+ansible_user=vyos
+ansible_password=vyos
