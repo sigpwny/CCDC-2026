@@ -1,5 +1,5 @@
 ansible_team: "{{ [(ansible_host.split('.')[-2] | int) - 20, 1] | max }}"
-ansible_hostname: "{{ (group_names | intersect(['dns','web','ftp']) | first) }}"
+ansible_hostname: "{{ (group_names | intersect(['dns','web','ftp','workstation']) | first | default(inventory_hostname)) }}"
 
 splunk_version: 10.0.2
 splunk_build: e2d18b4767e9

@@ -6,6 +6,12 @@
     name: "{{ 'audit' if 'audit' in ansible_facts.packages else 'auditd' }}"
     state: present
 
+- name: Ensure auditd is started
+  ansible.builtin.service:
+    name: auditd
+    state: started
+    enabled: true
+
 - name: Ensure folder audit rules are present
   ansible.builtin.blockinfile:
     path: "{{ rule_file }}"

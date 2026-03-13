@@ -1,9 +1,16 @@
 - name: Determine audit package name
   ansible.builtin.package_facts:
 
+- name: Install python3-libdnf5 for Ansible dnf module (Fedora/RHEL)
+  ansible.builtin.command:
+    cmd: dnf install -y python3-libdnf5
+  register: libdnf_result
+  changed_when: "'already installed' not in libdnf_result.stdout"
+  when: ansible_pkg_mgr in ['dnf', 'yum']
+
 - name: Install audit package if missing
   ansible.builtin.package:
-    name: "{{ 'audit' if 'audit' in ansible_facts.packages else 'auditd' }}"
+    name: "{{ 'audit' if ansible_pkg_mgr in ['dnf', 'yum'] else 'auditd' }}"
     state: present
 
 - name: Ensure execve audit rules are present (b32 + b64)

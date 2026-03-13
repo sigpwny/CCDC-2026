@@ -7,10 +7,11 @@ Wants=network-online.target
 Type=forking
 User=root
 Group=root
-ExecStart={{ install_dir }}/bin/splunk start --accept-license --answer-yes --no-prompt
+ExecStart={{ install_dir }}/bin/splunk start --accept-license --answer-yes --no-prompt --run-as-root
 ExecStop={{ install_dir }}/bin/splunk stop
 Restart=on-failure
 RestartSec=5
+TimeoutStartSec=180
 LimitNOFILE=65536
 
 [Install]

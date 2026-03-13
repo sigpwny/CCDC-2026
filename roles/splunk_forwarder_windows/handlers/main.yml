@@ -1,4 +1,9 @@
 - name: Restart SplunkForwarder
-  ansible.windows.win_service:
-    name: SplunkForwarder
-    state: restarted
+  ansible.windows.win_shell: |
+    Stop-Service SplunkForwarder -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 5
+    Start-Service SplunkForwarder
+  retries: 3
+  delay: 10
+  register: sf_restart
+  until: sf_restart is not failed

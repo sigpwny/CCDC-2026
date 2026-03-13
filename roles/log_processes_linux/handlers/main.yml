@@ -4,9 +4,5 @@
   notify: Restart audit service
 
 - name: Restart audit service
-  ansible.builtin.service:
-    name: auditd
-#    name: "{{ 'audit' if 'audit' in ansible_facts.packages else 'auditd' }}"
-    enabled: true
-    state: restarted
+  ansible.builtin.command: service auditd restart
   ignore_errors: true
