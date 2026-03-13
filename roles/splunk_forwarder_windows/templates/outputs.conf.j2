@@ -1,0 +1,7 @@
+[tcpout]
+defaultGroup = default-autolb-group
+
+[tcpout:default-autolb-group]
+server = {{ indexer_ip }}:{{ indexer_port }}
+
+[tcpout-server://{{ indexer_ip }}:{{ indexer_port }}]

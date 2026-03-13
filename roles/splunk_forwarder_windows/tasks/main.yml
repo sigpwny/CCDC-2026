@@ -32,6 +32,12 @@
     dest: "{{ install_dir }}\\etc\\system\\local\\inputs.conf"
   notify: Restart SplunkForwarder
 
+- name: Deploy outputs.conf
+  ansible.windows.win_template:
+    src: outputs.conf.j2
+    dest: "{{ install_dir }}\\etc\\system\\local\\outputs.conf"
+  notify: Restart SplunkForwarder
+
 - name: Deploy server.conf
   ansible.windows.win_template:
     src: server.conf.j2
