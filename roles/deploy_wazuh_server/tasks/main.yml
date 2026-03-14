@@ -73,12 +73,22 @@
         + groups['vyos']
       }}
 
-- name: Open Wazuh agent ports in firewalld
+# - name: Open Wazuh agent ports in firewalld
+#   ansible.posix.firewalld:
+#     port: "{{ item.1 }}/tcp"
+#     source: "{{ hostvars[item.0]['ansible_host'] | default(item.0) }}"
+#     permanent: true
+#     state: enabled
+#     immediate: true
+#   loop: "{{ wazuh_allowed_hosts | product(['1514','1515','55000']) | list }}"
+#   when: inventory_hostname in groups['splunk']
+
+- name: Open Wazuh agent ports for specific hosts
   ansible.posix.firewalld:
-    port: "{{ item.1 }}/tcp"
-    source: "{{ hostvars[item.0]['ansible_host'] | default(item.0) }}"
+    rich_rule: 'rule family="ipv4" source address="{{ hostvars[item.0].ansible_host | default(item.0) }}" port protocol="tcp" port="{{ item.1 }}" accept'
     permanent: true
-    state: enabled
     immediate: true
+    state: enabled
   loop: "{{ wazuh_allowed_hosts | product(['1514','1515','55000']) | list }}"
-  when: inventory_hostname in groups['splunk']
+  when: "'wazuh-server' in ansible_run_tags"
+  tags: [wazuh-server]
