@@ -38,8 +38,9 @@
   become: true
   gather_facts: true
   roles:
-    - deploy_wazuh_server
     - splunk_forwarder_linux
+    - deploy_wazuh_server
+    #- splunk_forwarder_linux
   tags: [wazuh, wazuh-server]
 
 # ---- Phase 3: Windows Endpoint Setup ----

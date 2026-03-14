@@ -13,7 +13,7 @@ sudo apt install python3-pip
 pipx ensurepath
 pipx install ansible
 pipx inject ansible pywinrm
-ansible-galaxy collection install ansible.windows community.windows
+ansible-galaxy collection install ansible.windows community.windows paloaltonetworks.panos vyos.vyos
 ```
 2. Modify IP addresses and credentials in your [hosts file](inventory/testing/hosts) as necessary
     - For simplicity sake, these scripts do not use a vault to store credentials, since these are already disclosed in the team packet.
