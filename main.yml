@@ -36,9 +36,11 @@
 - name: Wazuh Server
   hosts: splunk
   become: true
-  gather_facts: false
+  gather_facts: true
   roles:
+    - splunk_forwarder_linux
     - deploy_wazuh_server
+    #- splunk_forwarder_linux
   tags: [wazuh, wazuh-server]
 
 # ---- Phase 3: Windows Endpoint Setup ----

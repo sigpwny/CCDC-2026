@@ -3,21 +3,29 @@
     path: /var/ossec/bin/wazuh-control
   register: wazuh_installed
 
+- name: Set Wazuh repo URL for Oracle Linux (RHEL)
+  ansible.builtin.set_fact:
+    wazuh_repo_url: "https://packages.wazuh.com/4.x/yum/"
+  when: not wazuh_installed.stat.exists
+
 - name: Add Wazuh GPG key
-  ansible.builtin.apt_key:
-    url: "{{ wazuh_repo_key_url }}"
+  ansible.builtin.rpm_key:
+    key: "{{ wazuh_repo_key_url }}"
     state: present
   when: not wazuh_installed.stat.exists
 
 - name: Add Wazuh repository
-  ansible.builtin.apt_repository:
-    repo: "{{ wazuh_repo_url }}"
-    state: present
-    filename: wazuh
+  ansible.builtin.yum_repository:
+    name: wazuh
+    description: Wazuh repository
+    baseurl: "{{ wazuh_repo_url }}"
+    gpgcheck: true
+    gpgkey: "{{ wazuh_repo_key_url }}"
+    enabled: true
   when: not wazuh_installed.stat.exists
 
 - name: Install Wazuh manager
-  ansible.builtin.apt:
+  ansible.builtin.yum:
     name: wazuh-manager
     state: present
     update_cache: true
@@ -50,3 +58,37 @@
     create: true
   notify: Restart splunkforwarder
   ignore_errors: true
+
+- name: Define hosts allowed to connect to Wazuh
+  set_fact:
+    wazuh_allowed_hosts: >
+      {{
+        groups['ecom']
+        + groups['mail']
+        + groups['dns']
+        + groups['web']
+        + groups['ftp']
+        + groups['workstation']
+        + groups['paloalto']
+        + groups['vyos']
+      }}
+
+# - name: Open Wazuh agent ports in firewalld
+#   ansible.posix.firewalld:
+#     port: "{{ item.1 }}/tcp"
+#     source: "{{ hostvars[item.0]['ansible_host'] | default(item.0) }}"
+#     permanent: true
+#     state: enabled
+#     immediate: true
+#   loop: "{{ wazuh_allowed_hosts | product(['1514','1515','55000']) | list }}"
+#   when: inventory_hostname in groups['splunk']
+
+- name: Open Wazuh agent ports for specific hosts
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="{{ hostvars[item.0].ansible_host | default(item.0) }}" port protocol="tcp" port="{{ item.1 }}" accept'
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ wazuh_allowed_hosts | product(['1514','1515','55000']) | list }}"
+  when: "'wazuh-server' in ansible_run_tags"
+  tags: [wazuh-server]
