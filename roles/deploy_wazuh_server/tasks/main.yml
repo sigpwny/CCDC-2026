@@ -3,21 +3,29 @@
     path: /var/ossec/bin/wazuh-control
   register: wazuh_installed
 
+- name: Set Wazuh repo URL for Oracle Linux (RHEL)
+  ansible.builtin.set_fact:
+    wazuh_repo_url: "https://packages.wazuh.com/4.x/yum/"
+  when: not wazuh_installed.stat.exists
+
 - name: Add Wazuh GPG key
-  ansible.builtin.apt_key:
-    url: "{{ wazuh_repo_key_url }}"
+  ansible.builtin.rpm_key:
+    key: "{{ wazuh_repo_key_url }}"
     state: present
   when: not wazuh_installed.stat.exists
 
 - name: Add Wazuh repository
-  ansible.builtin.apt_repository:
-    repo: "{{ wazuh_repo_url }}"
-    state: present
-    filename: wazuh
+  ansible.builtin.yum_repository:
+    name: wazuh
+    description: Wazuh repository
+    baseurl: "{{ wazuh_repo_url }}"
+    gpgcheck: true
+    gpgkey: "{{ wazuh_repo_key_url }}"
+    enabled: true
   when: not wazuh_installed.stat.exists
 
 - name: Install Wazuh manager
-  ansible.builtin.apt:
+  ansible.builtin.yum:
     name: wazuh-manager
     state: present
     update_cache: true
