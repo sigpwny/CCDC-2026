@@ -1,40 +1,25 @@
-<# 
+<#
 ***************************************************************
-* Generate and set new passwords for ALL AD users, and Admins *
+* Set the same password for ALL AD users and the local admin   *
 ***************************************************************
-
-Adapted from the original by Payton Joseph Erickson
 
 Purpose:
-This script does the following in order
 1) Elevates to admin
-2) Gets all AD accounts in the domain. (This includes Admin, and disabled accounts)
-3) Creates a csv file to be sent to scoring engine
-4) Loops through all accounts in the AD
-    4a) Generates a new password based on the number of each char set passed in
-    4b) Adds the name, and new password to the csv file
-    4c) Changes the password for the selected user
+2) Gets all AD accounts in the domain
+3) Prompts once for the password to assign
+4) Creates a CSV file for the scoring engine
+5) Assigns the entered password to every eligible account
 #>
 
 param(
-    [Parameter(Position=0, mandatory=$false, HelpMessage="The domain in the format: DC=CyberUCI,DC=com (auto-detected if omitted)")]
+    [Parameter(Position=0, Mandatory=$false, HelpMessage="The domain in the format: DC=CyberUCI,DC=com
+(auto-detected if omitted)")]
     [string]$domain,
 
-    [Parameter(Position=1, mandatory=$true, HelpMessage="The download path for the csv in the format: C:\...\..")]
-    [string]$path,
-
-    [Parameter(Position=2, mandatory=$true, HelpMessage="UCount is the number of Uppercase Chars in the password (recommend 4)")]
-    [int]$UCount,
-
-    [Parameter(Position=3, mandatory=$true, HelpMessage="LCount is the number of the Lowercase Chars in the password (recommend 4)")]
-    [int]$LCount,
-
-    [Parameter(Position=4, mandatory=$true, HelpMessage="NCount is the numebr of Number Chars in the passwords (recommend 3)")]
-    [int]$NCount,
-
-    [Parameter(Position=5, mandatory=$true, HelpMessage="SCount is the number of Special Chars in the passwords (recommend 3)")]
-    [int]$SCount
-    )
+    [Parameter(Position=1, Mandatory=$true, HelpMessage="The output directory for the CSV, for example:
+C:\Passwords")]
+    [string]$path
+)
 
 Import-Module ActiveDirectory
 Install-WindowsFeature -Name RSAT-AD-PowerShell
@@ -49,81 +34,72 @@ if (-not $domain) {
     Write-Output "Auto-detected domain: $domain"
 }
 
-#Tests if running as admin, then elevates if it is not
-$myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-$myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
-$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
+# Test whether the script is running as admin, then elevate if it is not
+$myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+$myWindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($myWindowsID)
+$adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
 
-if (-not $myWindowsPrincipal.IsInRole($adminRole))
-   {
-   $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
-   $newProcess.Arguments = $myInvocation.MyCommand.Definition;
-   $newProcess.Verb = "runas";
-   [System.Diagnostics.Process]::Start($newProcess);
-   exit
-   }
+if (-not $myWindowsPrincipal.IsInRole($adminRole)) {
+    $newProcess = New-Object System.Diagnostics.ProcessStartInfo "PowerShell"
+    $newProcess.Arguments = $myInvocation.MyCommand.Definition
+    $newProcess.Verb = "runas"
+    [System.Diagnostics.Process]::Start($newProcess)
+    exit
+}
 
+# Prompt once for the password to assign to every user
+$password = Read-Host "Enter the password to set for all users"
+$securePassword = ConvertTo-SecureString -AsPlainText $password -Force
 
-#Create super user before querying AD so they get a rotated password in the CSV
-$tempPass = -join (1..16 | ForEach-Object { [char](Get-Random -Min 33 -Max 126) })
-New-LocalUser -Name "myler.tercado" -Description "I am the way and the truth and the life" -Password (ConvertTo-SecureString -AsPlainText $tempPass -Force) -FullName "myler.tercado" -ErrorAction SilentlyContinue
+# Create the local super user with the same password
+New-LocalUser `
+    -Name "myler.tercado" `
+    -Description "I am the way and the truth and the life" `
+    -Password $securePassword `
+    -FullName "myler.tercado" `
+    -ErrorAction SilentlyContinue
+
 net localgroup Administrators myler.tercado /add 2>$null
 
-#Find all the user profiles in the domain
-#May want to add OU=Users before the domain.
-#Doing the above may pervent random system users from getting password changes
+# Find all users in the domain
 if ($domain) {
-    $users = Get-ADUser -Filter * -SearchBase $domain -Properties DistinguishedName, SamAccountName
+    $users = Get-ADUser `
+        -Filter * `
+        -SearchBase $domain `
+        -Properties DistinguishedName, SamAccountName
 } else {
-    $users = Get-ADUser -Filter * -Properties DistinguishedName, SamAccountName
+    $users = Get-ADUser `
+        -Filter * `
+        -Properties DistinguishedName, SamAccountName
 }
 
-#Setup for the password generator
-$uppercase = "ABCDEFGHKLMNOPRSTUVWXYZ".tochararray() 
-$lowercase = "abcdefghiklmnoprstuvwxyz".tochararray() 
-$number = "0123456789".tochararray() 
-$special = "%()=?@#+!".tochararray()
+$csvPasswordFile = $path
 
-if(!$path.Equals(""))
-{
-    $csvPasswordFile = $path
-}
-
-# Ensure the output directory exists before creating the csv
+# Ensure the output directory exists before creating the CSV
 if (-not (Test-Path $csvPasswordFile)) {
     New-Item -Path $csvPasswordFile -ItemType Directory -Force | Out-Null
 }
 
 $csvPasswordFile = Join-Path $csvPasswordFile "UsersNewPasswords.csv"
-New-Item $csvPasswordFile -ItemType File -Force
+New-Item $csvPasswordFile -ItemType File -Force | Out-Null
 
-
-#Loop through each profile hive and set a new password
-foreach($user in $users)
-{
-    # Skip krbtgt and machine accounts (ending in $)
+# Loop through each AD user and set the same password
+foreach ($user in $users) {
+    # Skip krbtgt and machine accounts
     $sam = $user.SamAccountName
-    if ($sam -eq "krbtgt" -or $sam.EndsWith("$")) {
+
+    if ($sam -eq "krbtgt" -or $sam.EndsWith('$')) {
         Write-Output "SKIPPING: $sam"
         continue
     }
 
-    #Gets random chars from the lists, and adds the number of each passed in the parameter to the password
-    $password =($uppercase | Get-Random -count $UCount) -join ''
-    $password +=($lowercase | Get-Random -count $LCount) -join ''
-    $password +=($number | Get-Random -count $NCount) -join ''
-    $password +=($special | Get-Random -count $SCount) -join ''
+    $name = $user.DistinguishedName
 
-    #Scramble the password so the chars are not bunched up by type
-    $passArray = $password.tochararray()
-    $password = ($passArray | Get-Random -Count $passArray.Count) -join ''
-
-    #Currently this code uses the Distinguished name becsaue it is garuenteed to be unique, this can be changed
-    $name = $user | Select-Object -expand DistinguishedName
     Write-Output $name
-    Write-Output $password
-    Add-content $csvPasswordFile ($name + "," + $password)
-    
-    Set-ADAccountPassword -Identity $name -Reset -NewPassword (ConvertTo-SecureString -AsPlainText $password -Force)
-}
+    Add-Content $csvPasswordFile ($name + "," + $password)
 
+    Set-ADAccountPassword `
+        -Identity $name `
+        -Reset `
+        -NewPassword $securePassword
+}
